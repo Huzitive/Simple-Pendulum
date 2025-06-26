@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simple Pendulum Simulation</title>
+  <style>
+     * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(145deg, #060b13, #101d2b);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 15px;
+      min-height: 100vh;
+    }
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+      color: #00e5ff;
+      padding: 8px 16px;
+      border: 2px solid #00e5ff;
+      border-radius: 10px;
+      text-shadow: 0 0 10px #00e5ff;
+    }
+    h2 {
+      margin: 4px 0 15px;
+      font-size: 1.2rem;
+      color: #ffffffcc;
+      border: 1px solid #ffffff33;
+      padding: 4px 12px;
+      border-radius: 8px;
+    }
+    canvas {
+      background: radial-gradient(#1b2a3a, #0c1118);
+      border: 2px solid #00e5ff;
+      border-radius: 10px;
+      margin-top: 12px;
+      box-shadow: 0 0 20px #00e5ff44;
+    }
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      flex-direction: row;
+      gap: 25px;
+      align-items: flex-start;
+    }
+    .sliders {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    input[type=range] {
+      width: 130px;
+      accent-color: #00e5ff;
+    }
+    .num-input {
+      width: 60px;
+      padding: 4px;
+      background-color: #0c1824;
+      border: 1px solid #00e5ff;
+      color: #00e5ff;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      text-align: center;
+      box-shadow: 0 0 6px #00e5ff44;
+    }
+    .descriptions {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 280px;
+      font-size: 0.92rem;
+    }
+    .value-label { font-weight: bold; color: #00e676; }
+    .energy-display {
+      font-size: 0.85rem;
+      color: #ffff8d;
+      margin-top: 2px;
+    }
+    .equation-box {
+      background-color: #0e2236;
+      padding: 8px;
+      border-radius: 10px;
+      color: #b2ebf2;
+      font-size: 0.82rem;
+      margin-top: 6px;
+      border: 1px solid #00e5ff33;
+      box-shadow: 0 0 8px #00e5ff22 inset;
+    }
+    button {
+      margin-top: 15px;
+      padding: 8px 18px;
+      background-color: #00bcd4;
+      color: #0e1a2b;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 0 8px #00e5ff77;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    button:hover {
+      background-color: #00e5ff;
+      box-shadow: 0 0 12px #00ffffaa;
+    }
+    #exportBtn {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background-color: #00e676;
+      color: #0e1a2b;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 0 8px #00e676aa;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    #exportBtn:hover {
+      background-color: #00ff95;
+      box-shadow: 0 0 12px #00ff95bb;
+    }
+    footer {
+      margin-top: 30px;
+      font-size: 0.88rem;
+      color: #ffffffcc;
+      text-align: center;
+      border-top: 2px solid #ffffff55;
+      padding: 12px 20px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+  </style>
+</head>
+<body>
+  <h1>NEDUET PHYSICS DEPARTMENT</h1>
+  <h2>SIMPLE PENDULUM SIMULATION</h2>
+
+  <canvas id="pendulumCanvas" width="500" height="500"></canvas>
+  <canvas id="graphCanvas" width="500" height="150"></canvas>
+  <canvas id="energyCanvas" width="500" height="100"></canvas>
+
+  <div class="controls">
+        <div class="sliders">
+      <div class="control-group">
+        <label for="length">📏 Length</label>
+        <input type="range" id="length" min="50" max="300" value="200">
+        <input type="number" id="lengthInput" min="50" max="300" value="200" class="num-input">
+      </div>
+      <div class="control-group">
+        <label for="gravity">🌍 Gravity</label>
+        <input type="range" id="gravity" min="1" max="20" value="9.8" step="0.1">
+        <input type="number" id="gravityInput" min="1" max="20" value="9.8" step="0.1" class="num-input">
+      </div>
+      <div class="control-group">
+        <label for="mass">⚪ Mass</label>
+        <input type="range" id="mass" min="5" max="50" value="20">
+        <input type="number" id="massInput" min="5" max="50" value="20" class="num-input">
+      </div>
+    </div>
+    <div class="descriptions">
+      <p>📏 <strong>Length</strong>: Longer = slower swing. Shorter = quicker swing.</p>
+      <p>🌍 <strong>Gravity</strong>: More = faster swings. Less = slower swings.</p>
+      <p>⚪ <strong>Mass</strong>: Doesn't affect speed, but affects bob size visually.</p>
+      <p class="energy-display" id="energyDisplay">Energy: KE = 0, PE = 0, Total = 0</p>
+      <div class="equation-box">
+        <strong>Equations:</strong><br>
+        T = 2π√(L/g)<br>
+        KE = ½mv²<br>
+        PE = mgh<br>
+        θ(t) ≈ θ₀cos(√(g/L)t)
+      </div>
+    </div>
+
+  </div>
+
+  <button id="restartBtn">🔄 Restart Swing</button>
+  <button id="exportBtn">📤 Export Graph Data</button>
+  <div style="margin-top:8px; font-size: 0.9rem; color: #ffab40;">
+    ⏱️ Period (peak-to-peak): <span id="periodDisplay">Calculating...</span> s
+  </div>
+
+  <footer>
+    Created by <strong>Huzaifa</strong> &mdash; Guided by <strong>Miss Mariam Ghulam Nabi</strong>
+  </footer>
+
+  <audio id="tickSound" src="tick.wav" preload="auto"></audio>
+
+  <script>
+    const canvas = document.getElementById('pendulumCanvas');
+    const ctx = canvas.getContext('2d');
+    const graphCanvas = document.getElementById('graphCanvas');
+    const graphCtx = graphCanvas.getContext('2d');
+    const energyCanvas = document.getElementById('energyCanvas');
+    const energyCtx = energyCanvas.getContext('2d');
+    const tickSound = document.getElementById('tickSound');
+
+    let originX = canvas.width / 2;
+    let originY = 100;
+    let angle = Math.PI / 4;
+    let angleVelocity = 0;
+    let angleAcceleration = 0;
+    let damping = 0.005;
+    let gravity = 9.8;
+    let length = 200;
+    let mass = 20;
+    let running = true;
+    let time = 0;
+    let lastPeakTime = 0;
+    let lastAngleDirection = 1;
+    const angleHistory = [];
+    const simulationLog = [];
+
+    const syncSliderInput = (slider, input, variableSetter) => {
+      slider.addEventListener('input', () => {
+        variableSetter(parseFloat(slider.value));
+        input.value = slider.value;
+      });
+      input.addEventListener('input', () => {
+        variableSetter(parseFloat(input.value));
+        slider.value = input.value;
+      });
+    };
+
+    syncSliderInput(lengthEl = document.getElementById('length'), document.getElementById('lengthInput'), val => length = val);
+    syncSliderInput(gravityEl = document.getElementById('gravity'), document.getElementById('gravityInput'), val => gravity = val);
+    syncSliderInput(massEl = document.getElementById('mass'), document.getElementById('massInput'), val => mass = val);
+
+    document.getElementById('restartBtn').addEventListener('click', () => {
+      angle = Math.PI / 4;
+      angleVelocity = 0;
+      time = 0;
+      lastPeakTime = 0;
+      lastAngleDirection = 1;
+      running = true;
+      angleHistory.length = 0;
+      simulationLog.length = 0;
+    });
+
+    function drawStand() {
+      ctx.strokeStyle = '#00e5ff';
+      ctx.shadowColor = '#00e5ff';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(originX, 0);
+      ctx.lineTo(originX, originY);
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(originX, originY, 10, 0, Math.PI, true);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    function drawPendulum() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawStand();
+      let bobX = originX + length * Math.sin(angle);
+      let bobY = originY + length * Math.cos(angle);
+      ctx.beginPath();
+      ctx.moveTo(originX, originY);
+      ctx.lineTo(bobX, bobY);
+      ctx.strokeStyle = '#00e5ff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(bobX, bobY, mass, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff4081';
+      ctx.shadowColor = '#ff4081';
+      ctx.shadowBlur = 25;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    function drawGraph() {
+      graphCtx.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
+      angleHistory.push(angle);
+      if (angleHistory.length > graphCanvas.width) angleHistory.shift();
+      graphCtx.beginPath();
+      for (let i = 0; i < angleHistory.length; i++) {
+        const y = graphCanvas.height / 2 - angleHistory[i] * 100;
+        if (i === 0) graphCtx.moveTo(i, y);
+        else graphCtx.lineTo(i, y);
+      }
+      graphCtx.strokeStyle = '#00e5ff';
+      graphCtx.lineWidth = 2;
+      graphCtx.stroke();
+    }
+
+    function drawEnergy() {
+      let KE = 0.5 * mass * Math.pow(length * angleVelocity, 2);
+      let PE = mass * gravity * length * (1 - Math.cos(angle));
+      let total = KE + PE;
+      document.getElementById('energyDisplay').innerText =
+        `Energy: KE = ${KE.toFixed(1)}, PE = ${PE.toFixed(1)}, Total = ${total.toFixed(1)}`;
+      energyCtx.clearRect(0, 0, energyCanvas.width, energyCanvas.height);
+      let barWidth = 100;
+      let x = 50;
+      const drawBar = (value, color, label) => {
+        energyCtx.fillStyle = color;
+        energyCtx.fillRect(x, 100 - value / 5, barWidth, value / 5);
+        energyCtx.fillStyle = '#fff';
+        energyCtx.fillText(label, x + 30, 90);
+        x += barWidth + 20;
+      };
+      drawBar(KE, '#00e676', 'KE');
+      drawBar(PE, '#2979ff', 'PE');
+      drawBar(total, '#ffab40', 'Total');
+    }
+
+    function update() {
+      if (running) {
+        angleAcceleration = (-gravity / length) * Math.sin(angle);
+        angleVelocity += angleAcceleration;
+        angleVelocity *= (1 - damping);
+        angle += angleVelocity;
+        time += 0.016;
+        let KE = 0.5 * mass * Math.pow(length * angleVelocity, 2);
+        let PE = mass * gravity * length * (1 - Math.cos(angle));
+        let total = KE + PE;
+        simulationLog.push({
+          time: time.toFixed(3),
+          angle: angle.toFixed(5),
+          velocity: angleVelocity.toFixed(5),
+          KE: KE.toFixed(5),
+          PE: PE.toFixed(5),
+          total: total.toFixed(5)
+        });
+        let dir = Math.sign(angleVelocity);
+        if (dir !== lastAngleDirection && Math.abs(angleVelocity) < 0.01) {
+          let period = (time - lastPeakTime) * 2;
+          lastPeakTime = time;
+          document.getElementById('periodDisplay').innerText = period.toFixed(2);
+          tickSound.currentTime = 0;
+          tickSound.play();
+        }
+        lastAngleDirection = dir;
+      }
+      drawPendulum();
+      drawGraph();
+      drawEnergy();
+      requestAnimationFrame(update);
+    }
+
+    update();
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      let csvContent = "data:text/csv;charset=utf-8,Time (s),Angle (rad),Angular Velocity (rad/s),KE (J),PE (J),Total Energy (J)\n";
+      simulationLog.forEach(entry => {
+        csvContent += `${entry.time},${entry.angle},${entry.velocity},${entry.KE},${entry.PE},${entry.total}\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "pendulum_full_data.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  </script>
+</body>
+</html>
