@@ -153,8 +153,9 @@
         <div class="sliders">
       <div class="control-group">
         <label for="length">📏 Length</label>
-        <input type="range" id="length" min="50" max="300" value="200">
-        <input type="number" id="lengthInput" min="50" max="300" value="200" class="num-input">
+        <!-- Default value adjusted to 150 for a mid‑range period (~2.46 s) -->
+        <input type="range" id="length" min="50" max="300" value="150">
+        <input type="number" id="lengthInput" min="50" max="300" value="150" class="num-input">
       </div>
       <div class="control-group">
         <label for="gravity">🌍 Gravity</label>
@@ -163,8 +164,9 @@
       </div>
       <div class="control-group">
         <label for="mass">⚪ Mass</label>
-        <input type="range" id="mass" min="5" max="50" value="20">
-        <input type="number" id="massInput" min="5" max="50" value="20" class="num-input">
+        <!-- Slightly lighter default mass purely for visuals -->
+        <input type="range" id="mass" min="5" max="50" value="15">
+        <input type="number" id="massInput" min="5" max="50" value="15" class="num-input">
       </div>
     </div>
     <div class="descriptions">
@@ -211,14 +213,18 @@
     let angleAcceleration = 0;
     let damping = 0.005;
     let gravity = 9.8;
-    let length = 200;
-    let mass = 20;
+    let length = 150;  // updated default
+    let mass = 15;     // updated default
     let running = true;
     let time = 0;
     let lastPeakTime = 0;
     let lastAngleDirection = 1;
     const angleHistory = [];
     const simulationLog = [];
+
+    // Log only every 0.05 s to keep CSV size reasonable (~20 Hz instead of 60 Hz)
+    const logInterval = 0.05;
+    let nextLogTime = 0;
 
     const syncSliderInput = (slider, input, variableSetter) => {
       slider.addEventListener('input', () => {
@@ -244,6 +250,7 @@
       running = true;
       angleHistory.length = 0;
       simulationLog.length = 0;
+      nextLogTime = 0;
     });
 
     function drawStand() {
@@ -324,18 +331,23 @@
         angleVelocity += angleAcceleration;
         angleVelocity *= (1 - damping);
         angle += angleVelocity;
-        time += 0.016;
-        let KE = 0.5 * mass * Math.pow(length * angleVelocity, 2);
-        let PE = mass * gravity * length * (1 - Math.cos(angle));
-        let total = KE + PE;
-        simulationLog.push({
-          time: time.toFixed(3),
-          angle: angle.toFixed(5),
-          velocity: angleVelocity.toFixed(5),
-          KE: KE.toFixed(5),
-          PE: PE.toFixed(5),
-          total: total.toFixed(5)
-        });
+        time += 0.016; // ~60 fps simulation step
+
+        // Log at the specified interval to control CSV size
+        if (time >= nextLogTime) {
+          let KE = 0.5 * mass * Math.pow(length * angleVelocity, 2);
+          let PE = mass * gravity * length * (1 - Math.cos(angle));
+          simulationLog.push({
+            time: time.toFixed(3),
+            angle: angle.toFixed(5),
+            velocity: angleVelocity.toFixed(5),
+            KE: KE.toFixed(5),
+            PE: PE.toFixed(5),
+            total: (KE + PE).toFixed(5)
+          });
+          nextLogTime += logInterval;
+        }
+
         let dir = Math.sign(angleVelocity);
         if (dir !== lastAngleDirection && Math.abs(angleVelocity) < 0.01) {
           let period = (time - lastPeakTime) * 2;
